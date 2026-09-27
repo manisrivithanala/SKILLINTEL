@@ -1,0 +1,1511 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkillBridge · Follow-up Tracker</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Master theme -->
+    <link rel="stylesheet" href="../css/style.css">
+    <script src="../js/api.js"></script>
+
+    <style>
+        /* ===== RESET & BASE ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: #f4f7ff;
+            color: #1e293b;
+            min-height: 100vh;
+        }
+
+        /* ===== SIDEBAR ===== */
+        .sidebar {
+            width: 260px;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            background: linear-gradient(180deg, #0f172a, #172554, #312e81);
+            padding: 25px 18px;
+            color: white;
+            overflow-y: auto;
+            z-index: 100;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); border-radius: 10px; }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px 30px;
+        }
+
+        .brand-icon {
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 14px;
+            font-size: 22px;
+            background: linear-gradient(135deg, #2563eb, #7c3aed, #06b6d4);
+        }
+
+        .brand h2 { font-size: 18px; color: white; }
+        .brand p { font-size: 11px; color: #94a3b8; }
+
+        .menu-title {
+            color: #64748b;
+            font-size: 11px;
+            font-weight: 600;
+            margin: 12px 12px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .menu a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: #cbd5e1;
+            padding: 13px 14px;
+            border-radius: 14px;
+            margin: 6px 0;
+            transition: .3s;
+            font-size: 14px;
+        }
+
+        .menu a:hover { background: rgba(255,255,255,0.08); color: white; }
+
+        .menu a.active {
+            background: linear-gradient(90deg, #2563eb, #7c3aed);
+            color: white;
+            box-shadow: 0 10px 25px rgba(37,99,235,0.25);
+        }
+
+        .menu a i { width: 20px; text-align: center; }
+
+        .sidebar-footer {
+            position: absolute;
+            bottom: 20px;
+            left: 18px;
+            right: 18px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar-footer a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: #cbd5e1;
+            padding: 12px 14px;
+            border-radius: 12px;
+            transition: 0.3s;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .sidebar-footer a:hover { background: rgba(255,255,255,0.08); color: white; }
+
+        /* ===== MAIN CONTENT ===== */
+        .main {
+            margin-left: 260px;
+            padding: 25px 35px 120px;
+            min-height: 100vh;
+        }
+
+        /* ===== TOPBAR ===== */
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 28px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .title h1 { font-size: 28px; color: #172554; }
+        .title p { color: #64748b; font-size: 13px; margin-top: 5px; }
+
+        .top-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .icon-btn {
+            width: 46px;
+            height: 46px;
+            border: none;
+            border-radius: 15px;
+            background: white;
+            box-shadow: 0 5px 20px rgba(15,23,42,0.08);
+            cursor: pointer;
+            font-size: 18px;
+            transition: 0.3s;
+        }
+
+        .icon-btn:hover { transform: scale(1.05); }
+
+        .theme-toggle {
+            width: 46px;
+            height: 46px;
+            border: none;
+            border-radius: 15px;
+            background: white;
+            box-shadow: 0 5px 20px rgba(15,23,42,0.08);
+            cursor: pointer;
+            font-size: 18px;
+            color: #475569;
+            transition: 0.3s;
+        }
+
+        .theme-toggle:hover {
+            transform: rotate(15deg) scale(1.05);
+            color: #06b6d4;
+        }
+
+        .user {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 6px 12px 6px 6px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 5px 20px rgba(15,23,42,0.08);
+        }
+
+        .user-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+        }
+
+        .user h4 { font-size: 13px; }
+        .user p { font-size: 10px; color: #64748b; }
+
+        /* ===== HERO ===== */
+        .hero {
+            position: relative;
+            overflow: hidden;
+            padding: 32px;
+            border-radius: 26px;
+            color: white;
+            margin-bottom: 25px;
+            background: linear-gradient(120deg, #172554, #2563eb, #7c3aed, #0891b2);
+            box-shadow: 0 18px 40px rgba(37,99,235,0.25);
+        }
+
+        .hero::before {
+            content: "";
+            position: absolute;
+            width: 250px;
+            height: 250px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.08);
+            top: -100px;
+            right: -50px;
+        }
+
+        .hero-content { position: relative; z-index: 1; }
+
+        .hero h2 { font-size: 26px; margin-bottom: 8px; color: white; }
+        .hero p { max-width: 600px; font-size: 14px; opacity: .9; color: white; }
+
+        .hero-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .hero-tag {
+            padding: 8px 13px;
+            border-radius: 20px;
+            font-size: 11px;
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.15);
+            color: white;
+        }
+
+        /* ===== STATS ===== */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 18px;
+            margin-bottom: 25px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 20px;
+            border: 1px solid #e8edf5;
+            box-shadow: 0 10px 30px rgba(15,23,42,0.05);
+            transition: .3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 18px 35px rgba(37,99,235,0.12);
+        }
+
+        .stat-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .stat-icon {
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 14px;
+            font-size: 20px;
+        }
+
+        .blue-bg { background: #eff6ff; }
+        .purple-bg { background: #f5f3ff; }
+        .green-bg { background: #ecfdf5; }
+        .orange-bg { background: #fff7ed; }
+
+        .stat-card h3 { font-size: 23px; color: #172554; }
+        .stat-card p { color: #64748b; font-size: 12px; margin-top: 3px; }
+
+        .status-badge {
+            padding: 5px 9px;
+            border-radius: 15px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        .status-badge.blue { color: #2563eb; background: #dbeafe; }
+        .status-badge.green { color: #059669; background: #d1fae5; }
+        .status-badge.orange { color: #d97706; background: #fef3c7; }
+
+        /* ===== GRID ===== */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 22px;
+            margin-bottom: 25px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 22px;
+            padding: 24px;
+            border: 1px solid #e8edf5;
+            box-shadow: 0 10px 30px rgba(15,23,42,0.05);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 22px;
+        }
+
+        .card-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .card-icon {
+            width: 44px;
+            height: 44px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #dbeafe, #ede9fe, #cffafe);
+        }
+
+        .card h3 { color: #172554; font-size: 16px; }
+        .card-subtitle { font-size: 11px; color: #64748b; }
+
+        /* ===== TIMELINE ===== */
+        .timeline {
+            position: relative;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
+        .timeline::before {
+            content: "";
+            position: absolute;
+            height: 4px;
+            background: #e2e8f0;
+            top: 35px;
+            left: 12%;
+            right: 12%;
+            border-radius: 10px;
+            z-index: 0;
+        }
+
+        .timeline-step {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+        }
+
+        .step-circle {
+            width: 70px;
+            height: 70px;
+            margin: auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 50%;
+            background: white;
+            border: 5px solid #e2e8f0;
+            font-size: 22px;
+        }
+
+        .timeline-step.completed .step-circle {
+            border-color: #10b981;
+            background: #ecfdf5;
+        }
+
+        .timeline-step.active .step-circle {
+            border-color: #2563eb;
+            background: #eff6ff;
+            box-shadow: 0 0 0 8px #dbeafe;
+        }
+
+        .timeline-step.locked .step-circle {
+            border-color: #e2e8f0;
+            background: #f8fafc;
+        }
+
+        .step-name {
+            font-weight: 700;
+            font-size: 13px;
+            margin-top: 12px;
+            color: #172554;
+        }
+
+        .step-status { font-size: 10px; color: #64748b; margin-top: 4px; }
+
+        /* ===== SCORE ===== */
+        .score-content {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .score-ring {
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: conic-gradient(#2563eb 0deg 306deg, #e2e8f0 306deg);
+        }
+
+        .score-inner {
+            width: 82px;
+            height: 82px;
+            border-radius: 50%;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            font-weight: 700;
+            color: #172554;
+        }
+
+        .score-info h4 { font-size: 14px; color: #172554; }
+        .score-info p { font-size: 11px; color: #64748b; margin: 6px 0; }
+
+        .score-list { list-style: none; }
+
+        .score-list li {
+            font-size: 11px;
+            margin: 7px 0;
+            color: #475569;
+        }
+
+        /* ===== REMINDER ===== */
+        .reminder {
+            display: flex;
+            gap: 14px;
+            align-items: flex-start;
+            padding: 17px;
+            margin-top: 18px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #fff7ed, #fffbeb);
+            border: 1px solid #fed7aa;
+        }
+
+        .reminder-icon { font-size: 22px; }
+
+        .reminder h4 { font-size: 13px; color: #c2410c; }
+        .reminder p { font-size: 11px; color: #78716c; margin-top: 4px; }
+
+        /* ===== FORM ===== */
+        .section {
+            background: white;
+            border-radius: 22px;
+            padding: 25px;
+            margin-bottom: 22px;
+            border: 1px solid #e8edf5;
+            box-shadow: 0 10px 30px rgba(15,23,42,0.05);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 13px;
+            padding-bottom: 18px;
+            border-bottom: 1px solid #f1f5f9;
+            margin-bottom: 22px;
+        }
+
+        .section-icon {
+            width: 48px;
+            height: 48px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 15px;
+            font-size: 21px;
+            background: linear-gradient(135deg, #eff6ff, #f5f3ff, #ecfeff);
+        }
+
+        .section-header h3 { font-size: 16px; color: #172554; }
+        .section-header p { font-size: 11px; color: #64748b; margin-top: 3px; }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 18px;
+        }
+
+        .field { display: flex; flex-direction: column; }
+
+        .field label {
+            color: #475569;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 7px;
+        }
+
+        .field label .required { color: #ef4444; }
+
+        .field input,
+        .field select,
+        .field textarea {
+            width: 100%;
+            border: 1px solid #e2e8f0;
+            border-radius: 13px;
+            padding: 13px 14px;
+            background: #fafcff;
+            color: #334155;
+            outline: none;
+            transition: .25s;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .field textarea {
+            min-height: 105px;
+            resize: vertical;
+        }
+
+        .field input:focus,
+        .field select:focus,
+        .field textarea:focus {
+            background: white;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 4px rgba(99,102,241,0.09);
+        }
+
+        .field input[readonly] {
+            background: #f1f5f9;
+            color: #64748b;
+            cursor: not-allowed;
+        }
+
+        .field .helper-text {
+            font-size: 11px;
+            color: #94a3b8;
+            margin-top: 5px;
+        }
+
+        .full { grid-column: 1 / -1; }
+
+        /* ===== BUTTONS ===== */
+        .bottom-bar {
+            position: fixed;
+            bottom: 0;
+            left: 260px;
+            right: 0;
+            padding: 15px 35px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255,255,255,0.94);
+            backdrop-filter: blur(15px);
+            border-top: 1px solid #e2e8f0;
+            z-index: 50;
+        }
+
+        .auto-save {
+            font-size: 11px;
+            color: #64748b;
+        }
+
+        .auto-save span { color: #10b981; }
+
+        .buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            border: none;
+            padding: 12px 18px;
+            border-radius: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: .25s;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:hover { transform: translateY(-2px); }
+
+        .draft {
+            background: #eef2ff;
+            color: #4f46e5;
+        }
+
+        .clear {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .save {
+            color: white;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            box-shadow: 0 10px 22px rgba(79,70,229,0.25);
+        }
+
+        .save:hover { box-shadow: 0 14px 30px rgba(79,70,229,0.35); }
+        .save:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 1100px) {
+            .stats { grid-template-columns: repeat(2, 1fr); }
+            .dashboard-grid { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.open { transform: translateX(0); }
+
+            .main { margin-left: 0; padding: 20px 15px 120px; }
+
+            .bottom-bar {
+                left: 0;
+                padding: 12px 15px;
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .form-grid { grid-template-columns: 1fr; }
+            .stats { grid-template-columns: 1fr; }
+
+            .timeline {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 25px;
+            }
+
+            .timeline::before { display: none; }
+
+            .topbar {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+
+            .menu-toggle {
+                display: block;
+                background: none;
+                border: none;
+                color: #172554;
+                font-size: 24px;
+                cursor: pointer;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .hero { padding: 20px; }
+            .hero h2 { font-size: 20px; }
+            .title h1 { font-size: 22px; }
+            .stat-card h3 { font-size: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<div class="sidebar" id="sidebar">
+    <div class="brand">
+        <div class="brand-icon"><i class="fas fa-brain"></i></div>
+        <div>
+            <h2>Trainee Portal</h2>
+            <p>Career Outcome System</p>
+        </div>
+    </div>
+
+    <div class="menu">
+        <div class="menu-title">Main Menu</div>
+        <a href="dashboard.html"><i class="fas fa-home"></i> Dashboard</a>
+        <a href="employment.html"><i class="fas fa-briefcase"></i> Employment &amp; Livelihood</a>
+        <a href="follow-up.html" class="active"><i class="fas fa-calendar-check"></i> Follow-up</a>
+        <a href="history.html"><i class="fas fa-history"></i> Outcome History</a>
+    </div>
+
+    <div class="sidebar-footer">
+        <a onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a>
+    </div>
+</div>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div class="main">
+
+    <!-- ===== TOPBAR ===== -->
+    <div class="topbar">
+        <div class="title">
+            <h1>Follow-up Center <i class="fas fa-calendar-check" style="color:#2563eb; font-size:24px;"></i></h1>
+            <p>Track your career journey and keep your outcome information updated.</p>
+        </div>
+        <div class="top-actions">
+            <button class="theme-toggle" onclick="toggleTheme()" title="Switch to dark mode" aria-label="Toggle theme">
+                <i class="fas fa-moon"></i>
+            </button>
+            <button class="icon-btn" onclick="showNotifications()">
+                <i class="fas fa-bell"></i>
+            </button>
+            <div class="user">
+                <div class="user-avatar" id="userAvatar">H</div>
+                <div>
+                    <h4 id="userName">Trainee</h4>
+                    <p>Trainee</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== HERO ===== -->
+    <div class="hero">
+        <div class="hero-content">
+            <h2>Your Career Journey 🚀</h2>
+            <p>
+                Regular follow-ups help track your employment, income growth,
+                career development and the support you may need.
+            </p>
+            <div class="hero-tags">
+                <div class="hero-tag" id="nextFollowupTag">📅 Next Follow-up: 90 Days</div>
+                <div class="hero-tag">⭐ Health Score: Good</div>
+                <div class="hero-tag">🔔 Reminder Active</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== STATS ===== -->
+    <div class="stats">
+        <div class="stat-card">
+            <div class="stat-top">
+                <div class="stat-icon blue-bg">📅</div>
+                <span class="status-badge blue" id="nextPeriodStatus">Upcoming</span>
+            </div>
+            <h3 id="nextPeriodDays">90 Days</h3>
+            <p>Next Follow-up Period</p>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-top">
+                <div class="stat-icon orange-bg">⏳</div>
+                <span class="status-badge orange">Reminder</span>
+            </div>
+            <h3 id="daysRemaining">12 Days</h3>
+            <p>Days Remaining</p>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-top">
+                <div class="stat-icon green-bg">✅</div>
+                <span class="status-badge green" id="completedStatus">Updated</span>
+            </div>
+            <h3 id="completedCount">1 / 4</h3>
+            <p>Follow-ups Completed</p>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-top">
+                <div class="stat-icon purple-bg">⭐</div>
+                <span class="status-badge blue" id="healthStatus">Good</span>
+            </div>
+            <h3 id="healthScore">85%</h3>
+            <p>Follow-up Health Score</p>
+        </div>
+    </div>
+
+    <!-- ===== DASHBOARD GRID ===== -->
+    <div class="dashboard-grid">
+
+        <!-- TIMELINE CARD -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">
+                    <div class="card-icon">🗓️</div>
+                    <div>
+                        <h3>Follow-up Journey</h3>
+                        <p class="card-subtitle">Complete all stages of your career outcome journey</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="timeline" id="timelineContainer">
+                <div class="timeline-step completed">
+                    <div class="step-circle">✅</div>
+                    <div class="step-name">30 Days</div>
+                    <div class="step-status">Completed</div>
+                </div>
+                <div class="timeline-step active">
+                    <div class="step-circle">📅</div>
+                    <div class="step-name">90 Days</div>
+                    <div class="step-status">Upcoming</div>
+                </div>
+                <div class="timeline-step locked">
+                    <div class="step-circle">🔒</div>
+                    <div class="step-name">180 Days</div>
+                    <div class="step-status">Pending</div>
+                </div>
+                <div class="timeline-step locked">
+                    <div class="step-circle">🏁</div>
+                    <div class="step-name">365 Days</div>
+                    <div class="step-status">Final Stage</div>
+                </div>
+            </div>
+
+            <div class="reminder">
+                <div class="reminder-icon">🔔</div>
+                <div>
+                    <h4>Upcoming Follow-up</h4>
+                    <p id="reminderText">
+                        Your 90-day follow-up is scheduled soon.
+                        Please update your latest employment and income details.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- HEALTH SCORE -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">
+                    <div class="card-icon">💚</div>
+                    <div>
+                        <h3>Follow-up Health</h3>
+                        <p class="card-subtitle">Your current outcome status</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="score-content">
+                <div class="score-ring">
+                    <div class="score-inner" id="scoreInner">85%</div>
+                </div>
+                <div class="score-info">
+                    <h4 id="healthTitle">Good Progress 🎉</h4>
+                    <p id="healthDescription">
+                        Your employment and follow-up information
+                        is mostly up to date.
+                    </p>
+                    <ul class="score-list" id="scoreList">
+                        <li id="item1">✅ Employment Updated</li>
+                        <li id="item2">✅ Income Updated</li>
+                        <li id="item3">🔵 Follow-up Upcoming</li>
+                        <li id="item4">⚠️ Feedback Pending</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== FORM ===== -->
+    <form id="followupForm" onsubmit="return false;">
+
+        <!-- BASIC FOLLOW UP -->
+        <div class="section">
+            <div class="section-header">
+                <div class="section-icon">📅</div>
+                <div>
+                    <h3>Follow-up Details</h3>
+                    <p>Select your follow-up period and update status.</p>
+                </div>
+            </div>
+
+            <div class="form-grid">
+                <div class="field">
+                    <label>Follow-up Period <span class="required">*</span></label>
+                    <select id="followupPeriod" required>
+                        <option value="">Select Follow-up Period</option>
+                        <option value="30 Days">30 Days</option>
+                        <option value="90 Days" selected>90 Days</option>
+                        <option value="180 Days">180 Days</option>
+                        <option value="365 Days">365 Days</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Follow-up Date <span class="required">*</span></label>
+                    <input type="date" id="followupDate" required>
+                </div>
+                <div class="field">
+                    <label>Follow-up Status</label>
+                    <select id="followupStatus">
+                        <option value="Pending">Pending</option>
+                        <option value="In Progress">In Progress</option>
+                        <option value="Completed">Completed</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Preferred Contact Method</label>
+                    <select id="contactMethod">
+                        <option value="Phone Call">Phone Call</option>
+                        <option value="Email">Email</option>
+                        <option value="SMS">SMS</option>
+                        <option value="WhatsApp">WhatsApp</option>
+                    </select>
+                </div>
+                <div class="field full">
+                    <label>Follow-up Notes</label>
+                    <textarea id="followupNotes" placeholder="Add any follow-up notes or observations"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- EMPLOYMENT UPDATE -->
+        <div class="section">
+            <div class="section-header">
+                <div class="section-icon">💼</div>
+                <div>
+                    <h3>Employment Update</h3>
+                    <p>Keep your latest employment information updated.</p>
+                </div>
+            </div>
+
+            <div class="form-grid">
+                <div class="field">
+                    <label>Current Employment Status</label>
+                    <select id="empStatus">
+                        <option value="">Select Status</option>
+                        <option value="Employed">Employed</option>
+                        <option value="Self-Employed">Self-Employed</option>
+                        <option value="Internship">Internship</option>
+                        <option value="Apprenticeship">Apprenticeship</option>
+                        <option value="Unemployed">Unemployed</option>
+                        <option value="Looking for Job">Looking for Job</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Retention Status</label>
+                    <select id="retentionStatus">
+                        <option value="">Select Status</option>
+                        <option value="Retained">Retained</option>
+                        <option value="Changed Job">Changed Job</option>
+                        <option value="Left Job">Left Job</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Company / Organization</label>
+                    <input type="text" id="companyName" placeholder="Enter company name">
+                </div>
+                <div class="field">
+                    <label>Current Job Role</label>
+                    <input type="text" id="jobRole" placeholder="Enter job role">
+                </div>
+                <div class="field">
+                    <label>Employment Start Date</label>
+                    <input type="date" id="empStartDate">
+                </div>
+                <div class="field">
+                    <label>Employment Type</label>
+                    <select id="empType">
+                        <option value="">Select Type</option>
+                        <option value="Full Time">Full Time</option>
+                        <option value="Part Time">Part Time</option>
+                        <option value="Contract">Contract</option>
+                        <option value="Temporary">Temporary</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- INCOME UPDATE -->
+        <div class="section">
+            <div class="section-header">
+                <div class="section-icon">💰</div>
+                <div>
+                    <h3>Income &amp; Livelihood Update</h3>
+                    <p>Track your income progress after completing training.</p>
+                </div>
+            </div>
+
+            <div class="form-grid">
+                <div class="field">
+                    <label>Previous Monthly Income (₹)</label>
+                    <input type="number" id="prevIncome" placeholder="Enter previous income" oninput="calculateIncome()">
+                </div>
+                <div class="field">
+                    <label>Current Monthly Income (₹)</label>
+                    <input type="number" id="currIncome" placeholder="Enter current income" oninput="calculateIncome()">
+                </div>
+                <div class="field">
+                    <label>Income Source</label>
+                    <select id="incomeSource">
+                        <option value="">Select Source</option>
+                        <option value="Salary">Salary</option>
+                        <option value="Business">Business</option>
+                        <option value="Freelancing">Freelancing</option>
+                        <option value="Daily Wage">Daily Wage</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Income Stability</label>
+                    <select id="incomeStability">
+                        <option value="">Select</option>
+                        <option value="Stable">Stable</option>
+                        <option value="Growing">Growing</option>
+                        <option value="Decreasing">Decreasing</option>
+                        <option value="Irregular">Irregular</option>
+                    </select>
+                </div>
+                <div class="field full">
+                    <label>Income Growth</label>
+                    <input type="text" id="incomeGrowth" placeholder="Automatically calculated" readonly>
+                    <span class="helper-text">Automatically calculated based on previous and current income</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- CAREER FEEDBACK -->
+        <div class="section">
+            <div class="section-header">
+                <div class="section-icon">🚀</div>
+                <div>
+                    <h3>Career Feedback</h3>
+                    <p>Share your career progress and any support needed.</p>
+                </div>
+            </div>
+
+            <div class="form-grid">
+                <div class="field">
+                    <label>Career Progress Rating</label>
+                    <select id="careerRating">
+                        <option value="">Select Rating</option>
+                        <option value="Excellent">Excellent</option>
+                        <option value="Good">Good</option>
+                        <option value="Average">Average</option>
+                        <option value="Needs Improvement">Needs Improvement</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Skills Improved</label>
+                    <input type="text" id="skillsImproved" placeholder="Skills you have improved">
+                </div>
+                <div class="field full">
+                    <label>Additional Feedback</label>
+                    <textarea id="careerFeedback" placeholder="Any additional feedback about your career journey"></textarea>
+                </div>
+            </div>
+        </div>
+
+    </form>
+
+</div>
+
+<!-- ===== FIXED BOTTOM BAR ===== -->
+<div class="bottom-bar">
+    <div class="auto-save">
+        <i class="fas fa-sync-alt"></i> <span>Auto-save</span> enabled
+    </div>
+    <div class="buttons">
+        <button class="btn clear" onclick="clearForm()">
+            <i class="fas fa-undo"></i> Clear
+        </button>
+        <button class="btn draft" onclick="saveDraft()">
+            <i class="fas fa-pen"></i> Draft
+        </button>
+        <button class="btn save" id="saveBtn" onclick="saveFollowup()">
+            <i class="fas fa-save"></i> Save Follow-up
+        </button>
+    </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+<script>
+    // ============================================================
+    // FIREBASE CONFIG
+    // ============================================================
+    const firebaseConfig = {
+        apiKey: "AIzaSyDTA9U6UEzOhNy7lDKuQ-AFBMocHf-gtU8",
+        authDomain: "skillbridge-70863.firebaseapp.com",
+        projectId: "skillbridge-70863",
+        storageBucket: "skillbridge-70863.firebasestorage.app",
+        messagingSenderId: "912671486056",
+        appId: "1:912671486056:web:6f2dc11ab2c6042480cbdd"
+    };
+
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(() => {});
+
+    let _firebaseUser = null;
+    let _traineeData = null;
+    let _employmentData = null;
+
+    // ============================================================
+    // AUTH GUARD
+    // ============================================================
+    function requireAuth() {
+        return new Promise((resolve, reject) => {
+            const unsub = auth.onAuthStateChanged(async (fbUser) => {
+                unsub();
+                if (!fbUser) {
+                    if (localStorage.getItem('isLoggedIn') === 'true' &&
+                        localStorage.getItem('userRole') === 'trainee') {
+                        resolve(null);
+                        return;
+                    }
+                    window.location.href = '../auth/login.html?role=trainee';
+                    reject('not-authenticated');
+                    return;
+                }
+                _firebaseUser = fbUser;
+                resolve(fbUser);
+            });
+        });
+    }
+
+    // ============================================================
+    // LOAD ALL DATA FROM FIRESTORE
+    // ============================================================
+    async function loadAllData() {
+        const result = { traineeData: null, employmentData: null, followupData: null };
+        if (!_firebaseUser) return result;
+
+        try {
+            let snap = await db.collection('trainees').doc(_firebaseUser.uid).get();
+            let data = snap.exists ? snap.data() : null;
+
+            if (!data) {
+                snap = await db.collection('users').doc(_firebaseUser.uid).get();
+                data = snap.exists ? snap.data() : null;
+            }
+
+            if (data) {
+                result.traineeData = {
+                    fullName: data.fullName || 'Trainee',
+                    email: data.email || '',
+                    skillTrade: data.skillTrade || '',
+                    trainingProvider: data.trainingProvider || '',
+                    trainingProgress: data.trainingProgress || 100,
+                    certificationStatus: data.certificationStatus || 'Certified',
+                    prevIncome: Number(data.prevIncome) || 0,
+                };
+
+                if (data.employment) {
+                    const e = data.employment;
+                    result.employmentData = {
+                        status: e.status || 'N/A',
+                        companyName: e.companyName || 'N/A',
+                        jobRole: e.jobRole || 'N/A',
+                        employmentType: e.employmentType || 'N/A',
+                        joiningDate: e.joiningDate || '',
+                        jobCity: e.jobCity || 'N/A',
+                        currentIncome: Number(e.currentIncome) || 0,
+                        previousIncome: Number(e.previousIncome) || Number(data.prevIncome) || 0,
+                        prevCompany: e.prevCompany || '',
+                        prevRole: e.prevRole || '',
+                        prevSalary: Number(e.prevSalary) || 0,
+                        leavingDate: e.leavingDate || '',
+                    };
+                } else {
+                    result.employmentData = {
+                        status: 'N/A', companyName: 'N/A', jobRole: 'N/A',
+                        employmentType: 'N/A', joiningDate: '', jobCity: 'N/A',
+                        currentIncome: 0, previousIncome: Number(data.prevIncome) || 0,
+                        prevCompany: '', prevRole: '', prevSalary: 0, leavingDate: '',
+                    };
+                }
+
+                if (data.followup) {
+                    result.followupData = data.followup;
+                }
+            }
+
+            _traineeData = result.traineeData;
+            _employmentData = result.employmentData;
+        } catch (e) {
+            console.warn('loadAllData failed:', e);
+        }
+        return result;
+    }
+
+    // ============================================================
+    // UPDATE FUNCTIONS (same as before, but sourced from Firestore)
+    // ============================================================
+    function updateUserInfo(t) {
+        if (t && t.fullName) {
+            document.getElementById('userAvatar').textContent = t.fullName.charAt(0).toUpperCase();
+            document.getElementById('userName').textContent = t.fullName;
+        }
+    }
+
+    function updateHeroBadges(t, e) {
+        if (t && t.trainingProgress) {
+            document.getElementById('heroTraining').textContent = '🎓 Training ' + (t.trainingProgress >= 100 ? 'Completed' : 'In Progress');
+        }
+        if (e && e.status && e.status !== 'N/A') {
+            document.getElementById('heroEmployment').textContent = '💼 ' + e.status;
+        }
+        const prev = e.previousIncome || t.prevIncome || 0;
+        const curr = e.currentIncome || 0;
+        if (prev > 0 && curr > 0) {
+            const growth = Math.round(((curr - prev) / prev) * 100);
+            document.getElementById('heroGrowth').textContent = '📈 ' + growth + '% Growth';
+            if (growth > 20) document.getElementById('heroRetention').textContent = '🏆 Strong Retention';
+        }
+    }
+
+    function updateStats(t, e) {
+        const prev = e.previousIncome || t.prevIncome || 0;
+        const curr = e.currentIncome || 0;
+        const growth = prev > 0 ? Math.round(((curr - prev) / prev) * 100) : 0;
+        const jobs = (e.prevCompany ? 1 : 0) + (e.companyName && e.companyName !== 'N/A' ? 1 : 0);
+
+        document.getElementById('totalJobs').textContent = String(jobs).padStart(2, '0');
+        document.getElementById('currentIncomeDisplay').textContent = curr > 0 ? '₹' + (curr >= 1000 ? (curr/1000).toFixed(0) + 'K' : curr) : '₹0';
+        document.getElementById('incomeGrowthDisplay').textContent = (growth > 0 ? '+' : '') + growth + '%';
+        document.getElementById('retentionDisplay').textContent = e.status === 'Employed' ? '90%' : '0%';
+    }
+
+    function updateTimeline(t, e) {
+        if (t.trainingProgress) {
+            document.getElementById('timelineTraining').textContent = t.trainingProgress >= 100 ? '✅ Completed' : '⏳ ' + t.trainingProgress + '%';
+        }
+        if (t.certificationStatus) {
+            document.getElementById('timelineCert').textContent = t.certificationStatus === 'Certified' ? '✅ Received' : '⏳ Pending';
+        }
+        if (e.companyName && e.companyName !== 'N/A') {
+            document.getElementById('timelineFirstJob').textContent = '✅ ' + e.companyName;
+        }
+        const prev = e.previousIncome || t.prevIncome || 0;
+        const curr = e.currentIncome || 0;
+        if (prev > 0 && curr > 0) {
+            const growth = Math.round(((curr - prev) / prev) * 100);
+            document.getElementById('growthPercent').textContent = (growth > 0 ? '+' : '') + growth + '%';
+        }
+        if (e.companyName && e.companyName !== 'N/A') {
+            document.getElementById('timelineCareer').textContent = '🚀 Progressing';
+        }
+        if (e.status === 'Employed') {
+            document.getElementById('timelineRetention').textContent = 'Retained';
+        }
+    }
+
+    function updateCurrentJob(e, t) {
+        if (e.companyName && e.companyName !== 'N/A') {
+            document.getElementById('currentCompany').textContent = '🏢 ' + e.companyName;
+            document.getElementById('currentRole').textContent = e.jobRole || 'N/A';
+            document.getElementById('jobLocation').textContent = '📍 ' + (e.jobCity || 'N/A');
+            document.getElementById('jobType').textContent = '🕒 ' + (e.employmentType || 'N/A');
+            if (e.joiningDate) {
+                const d = new Date(e.joiningDate);
+                document.getElementById('jobDate').textContent = '📅 ' + d.toLocaleDateString('en-IN', { month: 'short', year: 'numeric' });
+            }
+            document.getElementById('currentSalary').textContent = '₹' + (e.currentIncome || 0).toLocaleString();
+        }
+    }
+
+    function updateScore(e, t) {
+        let score = 0;
+        if (e.companyName && e.companyName !== 'N/A') score += 30;
+        if (e.currentIncome > 0) score += 30;
+        if (e.status === 'Employed') score += 20;
+        if (t.trainingProgress >= 100) score += 20;
+
+        document.getElementById('overallScore').textContent = score + '%';
+        const el = document.getElementById('scoreStatus');
+        if (score >= 80) { el.textContent = '✨ Excellent'; el.style.background = '#dcfce7'; el.style.color = '#15803d'; }
+        else if (score >= 50) { el.textContent = '📈 Good Progress'; el.style.background = '#dbeafe'; el.style.color = '#1d4ed8'; }
+        else if (score >= 30) { el.textContent = '⏳ Needs Improvement'; el.style.background = '#fef3c7'; el.style.color = '#b45309'; }
+        else { el.textContent = '🔴 No Data'; el.style.background = '#fee2e2'; el.style.color = '#dc2626'; }
+    }
+
+    function updateIncomeChart(e, t) {
+        const prev = e.previousIncome || t.prevIncome || 0;
+        const curr = e.currentIncome || 0;
+        const mid = Math.round((prev + curr) / 2) || 0;
+
+        document.getElementById('income1').textContent = prev > 0 ? '₹' + (prev/1000).toFixed(0) + 'K' : '₹0';
+        document.getElementById('income2').textContent = mid > 0 ? '₹' + (mid/1000).toFixed(0) + 'K' : '₹0';
+        document.getElementById('income3').textContent = curr > 0 ? '₹' + (curr/1000).toFixed(0) + 'K' : '₹0';
+        document.getElementById('income4').textContent = curr > 0 ? '₹' + (curr/1000).toFixed(0) + 'K' : '₹0';
+
+        document.getElementById('summaryBefore').textContent = '₹' + prev.toLocaleString();
+        document.getElementById('summaryFirst').textContent = '₹' + mid.toLocaleString();
+        document.getElementById('summaryCurrent').textContent = '₹' + curr.toLocaleString();
+        const growth = prev > 0 ? Math.round(((curr - prev) / prev) * 100) : 0;
+        document.getElementById('summaryGrowth').textContent = (growth > 0 ? '+' : '') + growth + '%';
+
+        const maxVal = Math.max(prev, curr, mid, 1);
+        const bars = document.querySelectorAll('.chart-bar');
+        const values = [prev, mid, curr, curr];
+        bars.forEach((bar, i) => {
+            bar.style.height = Math.max((values[i] / maxVal) * 180, 20) + 'px';
+        });
+    }
+
+    function updateEmploymentHistory(e, t) {
+        const list = document.getElementById('historyList');
+        const jobs = [];
+
+        if (e.companyName && e.companyName !== 'N/A') {
+            jobs.push({
+                company: e.companyName,
+                role: e.jobRole || 'N/A',
+                location: e.jobCity || 'N/A',
+                date: e.joiningDate ? new Date(e.joiningDate).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }) : 'N/A',
+                type: e.employmentType || 'Full Time',
+                salary: e.currentIncome || 0,
+                status: 'Current Job',
+                icon: '🏢',
+            });
+        }
+        if (e.prevCompany) {
+            jobs.push({
+                company: e.prevCompany,
+                role: e.prevRole || 'N/A',
+                location: 'N/A',
+                date: e.leavingDate ? new Date(e.leavingDate).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }) : 'N/A',
+                type: 'Previous',
+                salary: e.prevSalary || 0,
+                status: 'Completed',
+                icon: '💻',
+            });
+        }
+
+        if (jobs.length === 0) {
+            list.innerHTML = `<div style="text-align:center;padding:30px;color:#94a3b8;">
+                <i class="fas fa-briefcase" style="font-size:40px;display:block;margin-bottom:10px;"></i>
+                No employment records yet. Please update your employment details.
+            </div>`;
+            return;
+        }
+
+        list.innerHTML = jobs.map((job, i) => `
+            <div class="history-card">
+                <div class="history-left">
+                    <div class="company-icon">${job.icon}</div>
+                    <div class="company-info">
+                        <h3>${job.company}</h3>
+                        <p>${job.role}</p>
+                        <div class="history-meta">
+                            <span class="meta">📍 ${job.location}</span>
+                            <span class="meta">📅 ${job.date}</span>
+                            <span class="meta">💼 ${job.type}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="history-right">
+                    <h3>₹${job.salary.toLocaleString()}</h3>
+                    <span class="status-badge ${i === 0 ? 'active-status' : 'old-status'}">${job.status}</span>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function updateRetention(e) {
+        const stages = [
+            { id: 'ret30', statusId: 'ret30Status', days: 30 },
+            { id: 'ret90', statusId: 'ret90Status', days: 90 },
+            { id: 'ret180', statusId: 'ret180Status', days: 180 },
+            { id: 'ret365', statusId: 'ret365Status', days: 365 },
+        ];
+        const hasJob = e.companyName && e.companyName !== 'N/A';
+        const joinDate = e.joiningDate ? new Date(e.joiningDate) : null;
+
+        stages.forEach(s => {
+            const el = document.getElementById(s.id);
+            const st = document.getElementById(s.statusId);
+            el.textContent = s.days;
+            if (hasJob && joinDate) {
+                const days = Math.floor((new Date() - joinDate) / 86400000);
+                if (days >= s.days) { st.textContent = '✅ Completed'; st.className = 'retention-status completed'; }
+                else if (days >= s.days - 15) { st.textContent = '🔄 In Progress'; st.className = 'retention-status inprogress'; }
+                else { st.textContent = '⏳ Upcoming'; st.className = 'retention-status upcoming'; }
+            } else {
+                st.textContent = '🔒 Locked';
+                st.className = 'retention-status upcoming';
+            }
+        });
+    }
+
+    function updateAchievements(t, e) {
+        const grid = document.getElementById('achievementGrid');
+        const items = [];
+
+        if (t.trainingProgress >= 100) items.push({ icon: '🎓', title: 'Training Completed', desc: 'Successfully completed' });
+        if (t.certificationStatus === 'Certified') items.push({ icon: '📜', title: 'Certified', desc: 'Certificate earned' });
+        if (e.companyName && e.companyName !== 'N/A') items.push({ icon: '💼', title: 'Employment Achieved', desc: e.companyName });
+        const prev = e.previousIncome || t.prevIncome || 0;
+        const curr = e.currentIncome || 0;
+        if (prev > 0 && curr > prev) {
+            const g = Math.round(((curr - prev) / prev) * 100);
+            items.push({ icon: '📈', title: 'Income Growth', desc: g + '% increase' });
+        }
+        if (e.status === 'Employed') items.push({ icon: '🏆', title: 'Retention', desc: 'Currently employed' });
+
+        if (items.length === 0) {
+            grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:20px;color:#94a3b8;">
+                Complete training & employment to unlock achievements.
+            </div>`;
+            return;
+        }
+
+        grid.innerHTML = items.map(a => `
+            <div class="achievement">
+                <div class="achievement-icon">${a.icon}</div>
+                <h4>${a.title}</h4>
+                <p style="font-size:8px;color:#888;margin-top:4px;">${a.desc}</p>
+            </div>
+        `).join('');
+    }
+
+    // ============================================================
+    // BUTTONS
+    // ============================================================
+    function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+    function showNotifications() { alert('📬 No new notifications.'); }
+    function viewJourney() { alert('View Journey'); }
+    function viewAllHistory() { alert('View All History'); }
+    function generateSummary() { alert('Summary generated'); }
+    function downloadReport() { alert('Downloading report...'); }
+
+    async function logout() {
+        if (!confirm('Are you sure you want to logout?')) return;
+        try {
+            localStorage.removeItem('isLoggedIn');
+            localStorage.removeItem('userRole');
+            localStorage.removeItem('userId');
+            localStorage.removeItem('userEmail');
+            localStorage.removeItem('userName');
+            localStorage.removeItem('currentTraineeEmail');
+            localStorage.removeItem('currentTraineeId');
+            await auth.signOut();
+        } catch (e) {}
+        window.location.href = '../auth/login.html?role=trainee';
+    }
+
+    function toggleTheme() {
+        const html = document.documentElement;
+        const next = (html.getAttribute('data-theme') || 'light') === 'dark' ? 'light' : 'dark';
+        html.setAttribute('data-theme', next);
+        try { localStorage.setItem('skillintel-theme', next); } catch (e) {}
+        const icon = document.querySelector('.theme-toggle i');
+        if (icon) icon.className = next === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+    }
+
+    // ============================================================
+    // INIT
+    // ============================================================
+    document.addEventListener('DOMContentLoaded', async function() {
+        try {
+            const saved = localStorage.getItem('skillintel-theme') || 'light';
+            document.documentElement.setAttribute('data-theme', saved);
+            const icon = document.querySelector('.theme-toggle i');
+            if (icon) icon.className = saved === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        } catch (e) {}
+
+        try {
+            await requireAuth();
+            const { traineeData, employmentData } = await loadAllData();
+
+            if (traineeData) {
+                updateUserInfo(traineeData);
+                updateHeroBadges(traineeData, employmentData || {});
+                updateStats(traineeData, employmentData || {});
+                updateTimeline(traineeData, employmentData || {});
+                updateCurrentJob(employmentData || {}, traineeData);
+                updateScore(employmentData || {}, traineeData);
+                updateIncomeChart(employmentData || {}, traineeData);
+                updateEmploymentHistory(employmentData || {}, traineeData);
+                updateRetention(employmentData || {});
+                updateAchievements(traineeData, employmentData || {});
+            }
+        } catch (e) {
+            console.warn('Init aborted:', e);
+        }
+
+        document.addEventListener('click', function(ev) {
+            const sb = document.getElementById('sidebar');
+            const tg = document.querySelector('.menu-toggle');
+            if (window.innerWidth <= 768 && sb.classList.contains('open')) {
+                if (!sb.contains(ev.target) && ev.target !== tg && !tg.contains(ev.target)) {
+                    sb.classList.remove('open');
+                }
+            }
+        });
+    });
+</script>
+<script src="../js/script.js"></script>
+</body>
+</html>

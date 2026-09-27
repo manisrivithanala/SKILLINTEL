@@ -1,0 +1,1425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Employment & Retention · SkillBridge</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800;14..32,900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../css/style.css">
+
+    <!-- ✅ Firebase SDK (compat) -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', system-ui, sans-serif; }
+        body {
+            background: #f0f4f9;
+            display: flex;
+            min-height: 100vh;
+        }
+        .sidebar {
+            width: 275px;
+            background: linear-gradient(180deg, #0f172a 0%, #172554 50%, #1e3a8a 100%);
+            color: white;
+            padding: 24px 16px;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 100;
+            transition: transform 0.3s ease;
+        }
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 10px 24px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            margin-bottom: 18px;
+        }
+        .sidebar-brand .icon {
+            width: 44px; height: 44px; border-radius: 14px;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px;
+            box-shadow: 0 8px 20px -6px rgba(37,99,235,0.35);
+        }
+        .sidebar-brand h2 { font-size: 18px; font-weight: 700; letter-spacing: -0.02em; }
+        .sidebar-brand p { font-size: 10px; opacity: 0.5; font-weight: 500; margin-top: 2px; }
+        .sidebar-user {
+            display: flex; align-items: center; gap: 12px;
+            padding: 12px 12px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            margin-bottom: 16px;
+        }
+        .sidebar-user .avatar {
+            width: 44px; height: 44px; border-radius: 14px;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 18px;
+            flex-shrink: 0;
+        }
+        .sidebar-user .info .name { font-size: 14px; font-weight: 600; }
+        .sidebar-user .info .role { font-size: 11px; opacity: 0.5; }
+        .menu-label {
+            font-size: 10px; text-transform: uppercase; letter-spacing: 1px;
+            opacity: 0.35; padding: 12px 12px 6px; font-weight: 700;
+        }
+        .menu a {
+            display: flex; align-items: center; gap: 12px;
+            padding: 10px 14px; border-radius: 12px;
+            color: rgba(255,255,255,0.65);
+            text-decoration: none; transition: all 0.2s;
+            margin: 2px 0; font-size: 14px; font-weight: 500;
+            cursor: pointer;
+        }
+        .menu a:hover { background: rgba(255,255,255,0.08); color: white; }
+        .menu a.active {
+            background: rgba(255,255,255,0.12);
+            color: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .menu a i { width: 20px; text-align: center; font-size: 15px; }
+        .menu a .badge {
+            margin-left: auto;
+            background: #ef4444;
+            color: white;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 9px;
+            border-radius: 20px;
+        }
+        .sidebar-footer {
+            padding: 20px 12px 0;
+            border-top: 1px solid rgba(255,255,255,0.08);
+            margin-top: 16px;
+        }
+        .sidebar-footer a {
+            display: flex; align-items: center; gap: 12px;
+            padding: 10px 14px; border-radius: 12px;
+            color: rgba(255,255,255,0.5);
+            text-decoration: none; transition: 0.2s;
+            font-size: 14px; font-weight: 500;
+            cursor: pointer;
+        }
+        .sidebar-footer a:hover { background: rgba(255,255,255,0.06); color: white; }
+        .main-content {
+            margin-left: 275px;
+            flex: 1;
+            padding: 0;
+            min-height: 100vh;
+        }
+        .header {
+            background: rgba(255,255,255,0.92);
+            backdrop-filter: blur(16px);
+            padding: 14px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(226,232,240,0.6);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+        .header-left { display: flex; align-items: center; gap: 16px; }
+        .menu-toggle {
+            display: none;
+            background: none; border: none;
+            font-size: 22px; color: #0b1a33;
+            cursor: pointer;
+        }
+        .header-left .page-title h1 {
+            font-size: 20px; color: #0b1a33;
+            font-weight: 700;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .header-left .page-title h1 i { color: #2563eb; }
+        .header-left .page-title p {
+            font-size: 12px; color: #64748b;
+            margin-top: 1px;
+        }
+        .header-right {
+            display: flex; align-items: center; gap: 16px;
+        }
+        .header-right .date {
+            font-size: 13px; color: #64748b;
+            font-weight: 500;
+            background: #f1f5f9;
+            padding: 6px 14px;
+            border-radius: 20px;
+        }
+        .header-right .notif {
+            position: relative;
+            font-size: 20px; color: #475569;
+            cursor: pointer;
+            width: 40px; height: 40px;
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            transition: 0.2s;
+        }
+        .header-right .notif:hover { background: #f1f5f9; }
+        .header-right .notif .badge {
+            position: absolute; top: 2px; right: 2px;
+            background: #ef4444; color: white;
+            width: 20px; height: 20px;
+            font-size: 10px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700;
+        }
+        .header-right .profile-btn {
+            display: flex; align-items: center; gap: 10px;
+            background: #f1f5f9;
+            padding: 5px 14px 5px 5px;
+            border-radius: 30px;
+            cursor: pointer;
+            border: none;
+            transition: 0.2s;
+        }
+        .header-right .profile-btn:hover { background: #e2e8f0; }
+        .header-right .profile-btn .avatar {
+            width: 36px; height: 36px; border-radius: 50%;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            color: white;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 14px;
+        }
+        .header-right .profile-btn .name { font-size: 13px; font-weight: 600; color: #0b1a33; }
+        .header-right .profile-btn i { color: #94a3b8; font-size: 13px; }
+        .theme-toggle {
+            background: #f1f5f9;
+            border: none;
+            width: 40px; height: 40px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 16px;
+            color: #475569;
+            transition: 0.2s;
+        }
+        .theme-toggle:hover { background: #e2e8f0; }
+        .container {
+            padding: 24px 32px 32px;
+            max-width: 1440px;
+            margin: auto;
+        }
+        .welcome {
+            background: linear-gradient(135deg, #1e3a8a, #2563eb, #7c3aed);
+            color: white;
+            padding: 28px 32px;
+            border-radius: 20px;
+            margin-bottom: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+        .welcome::before {
+            content: "";
+            position: absolute;
+            width: 350px; height: 350px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.05);
+            top: -130px; right: -80px;
+        }
+        .welcome-content { position: relative; z-index: 1; }
+        .welcome h2 {
+            font-size: 26px; margin-bottom: 4px;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .welcome p { font-size: 15px; opacity: 0.85; }
+        .welcome .welcome-stats {
+            display: flex; gap: 30px;
+            margin-top: 16px; flex-wrap: wrap;
+        }
+        .welcome .welcome-stats div { font-size: 13px; }
+        .welcome .welcome-stats strong { font-size: 20px; display: block; }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: white;
+            padding: 18px 16px;
+            border-radius: 16px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+            border: 1px solid #eef2f6;
+            transition: all 0.3s;
+            text-align: center;
+        }
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 30px rgba(37,99,235,0.08);
+        }
+        .stat-card .stat-icon {
+            width: 48px; height: 48px;
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px;
+            margin: 0 auto 8px;
+        }
+        .stat-card .stat-icon.blue { background: #dbeafe; color: #2563eb; }
+        .stat-card .stat-icon.green { background: #dcfce7; color: #16a34a; }
+        .stat-card .stat-icon.purple { background: #ede9fe; color: #7c3aed; }
+        .stat-card .stat-icon.orange { background: #fef3c7; color: #d97706; }
+        .stat-card .stat-icon.teal { background: #ccfbf1; color: #0d9488; }
+        .stat-card .stat-number {
+            font-size: 28px; font-weight: 800;
+            color: #0b1a33;
+        }
+        .stat-card .stat-label {
+            font-size: 12px; color: #64748b;
+            margin-top: 2px;
+        }
+        .stat-card .stat-change {
+            font-size: 11px; font-weight: 600;
+            padding: 2px 10px; border-radius: 20px;
+            display: inline-block;
+            margin-top: 4px;
+        }
+        .stat-card .stat-change.up { background: #dcfce7; color: #16a34a; }
+        .stat-card .stat-change.down { background: #fee2e2; color: #dc2626; }
+        .stat-card .stat-change.neutral { background: #f1f5f9; color: #64748b; }
+        .retention-timeline {
+            background: white;
+            border-radius: 18px;
+            padding: 24px;
+            border: 1px solid #eef2f6;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+        }
+        .retention-timeline .section-title {
+            font-size: 16px; font-weight: 700;
+            color: #0b1a33;
+            margin-bottom: 20px;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .retention-timeline .section-title i { color: #2563eb; }
+        .timeline-track {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            padding: 10px 0;
+        }
+        .timeline-track::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 8%;
+            right: 8%;
+            height: 4px;
+            background: #e2e8f0;
+            border-radius: 10px;
+            transform: translateY(-50%);
+            z-index: 0;
+        }
+        .timeline-track .track-fill {
+            position: absolute;
+            top: 50%;
+            left: 8%;
+            height: 4px;
+            background: linear-gradient(90deg, #22c55e, #2563eb, #7c3aed);
+            border-radius: 10px;
+            transform: translateY(-50%);
+            z-index: 1;
+            transition: width 0.8s ease;
+        }
+        .timeline-node {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 2;
+            flex: 1;
+            text-align: center;
+        }
+        .timeline-node .node-circle {
+            width: 48px; height: 48px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 16px; font-weight: 700;
+            background: #e2e8f0;
+            color: #94a3b8;
+            border: 3px solid #e2e8f0;
+            transition: all 0.3s;
+        }
+        .timeline-node.completed .node-circle {
+            background: #22c55e;
+            color: white;
+            border-color: #22c55e;
+            box-shadow: 0 4px 16px rgba(34,197,94,0.3);
+        }
+        .timeline-node.active .node-circle {
+            background: #2563eb;
+            color: white;
+            border-color: #2563eb;
+            box-shadow: 0 4px 16px rgba(37,99,235,0.3);
+            animation: pulse 2s infinite;
+        }
+        .timeline-node.upcoming .node-circle {
+            background: #f1f5f9;
+            color: #94a3b8;
+            border-color: #e2e8f0;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.08); }
+        }
+        .timeline-node .node-label {
+            font-size: 11px; font-weight: 600;
+            color: #64748b;
+            margin-top: 8px;
+        }
+        .timeline-node .node-value {
+            font-size: 13px; font-weight: 700;
+            color: #0b1a33;
+        }
+        .timeline-node.completed .node-label { color: #16a34a; }
+        .timeline-node.active .node-label { color: #2563eb; }
+        .two-column {
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 22px;
+            margin-bottom: 24px;
+        }
+        .card {
+            background: white;
+            border-radius: 18px;
+            padding: 22px 24px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+            border: 1px solid #eef2f6;
+            transition: 0.3s;
+        }
+        .card:hover { box-shadow: 0 8px 25px rgba(0,0,0,0.06); }
+        .card-header {
+            display: flex; justify-content: space-between;
+            align-items: center; margin-bottom: 16px;
+        }
+        .card-header h3 {
+            font-size: 16px; color: #0b1a33;
+            display: flex; align-items: center; gap: 10px;
+            font-weight: 700;
+        }
+        .card-header h3 i { color: #2563eb; }
+        .card-header .view-all {
+            font-size: 12px; color: #2563eb;
+            font-weight: 600; text-decoration: none;
+            cursor: pointer; transition: 0.2s;
+        }
+        .card-header .view-all:hover { text-decoration: underline; }
+        .retention-detail-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .retention-detail-item:last-child { border-bottom: none; }
+        .retention-detail-item .label {
+            font-size: 13px; color: #64748b;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .retention-detail-item .label i { color: #2563eb; width: 16px; }
+        .retention-detail-item .value {
+            font-weight: 600; color: #0b1a33;
+        }
+        .retention-detail-item .value.positive { color: #16a34a; }
+        .retention-detail-item .value.warning { color: #d97706; }
+        .retention-detail-item .value.danger { color: #dc2626; }
+        .trainee-item {
+            display: flex; align-items: center;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #f1f5f9;
+            transition: 0.2s;
+        }
+        .trainee-item:last-child { border-bottom: none; }
+        .trainee-item:hover { background: #f8fafc; margin: 0 -12px; padding: 10px 12px; border-radius: 10px; }
+        .trainee-item .info {
+            display: flex; align-items: center; gap: 12px;
+        }
+        .trainee-item .info .avatar {
+            width: 38px; height: 38px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 13px;
+            color: white; flex-shrink: 0;
+        }
+        .trainee-item .info .details .name {
+            font-weight: 600; font-size: 14px;
+            color: #0b1a33;
+        }
+        .trainee-item .info .details .sub {
+            font-size: 12px; color: #64748b;
+        }
+        .trainee-item .status {
+            font-size: 10px; font-weight: 600;
+            padding: 3px 12px; border-radius: 20px;
+        }
+        .trainee-item .status.retained { background: #dcfce7; color: #16a34a; }
+        .trainee-item .status.at-risk { background: #fef3c7; color: #d97706; }
+        .trainee-item .status.left { background: #fee2e2; color: #dc2626; }
+        .trainee-item .status.pending { background: #dbeafe; color: #2563eb; }
+        .retention-bar-container {
+            margin-top: 12px;
+        }
+        .retention-bar-label {
+            display: flex; justify-content: space-between;
+            font-size: 12px; color: #64748b;
+            margin-bottom: 4px;
+        }
+        .retention-bar-track {
+            width: 100%; height: 8px;
+            background: #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .retention-bar-track .fill {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.8s ease;
+        }
+        .retention-bar-track .fill.green { background: #22c55e; }
+        .retention-bar-track .fill.blue { background: #2563eb; }
+        .retention-bar-track .fill.orange { background: #d97706; }
+        .retention-bar-track .fill.red { background: #dc2626; }
+        .quick-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 8px;
+        }
+        .quick-actions .action-btn {
+            padding: 14px;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            background: #f8fafc;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            color: #0b1a33;
+            font-weight: 500;
+            font-size: 12px;
+        }
+        .quick-actions .action-btn:hover {
+            background: #2563eb;
+            color: white;
+            border-color: #2563eb;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(37,99,235,0.2);
+        }
+        .quick-actions .action-btn i {
+            display: block;
+            font-size: 20px;
+            margin-bottom: 4px;
+            color: #2563eb;
+        }
+        .quick-actions .action-btn:hover i { color: white; }
+        .chart-bars {
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-end;
+            height: 150px;
+            margin: 12px 0 8px;
+            gap: 12px;
+        }
+        .chart-bar {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+        }
+        .chart-bar .bar {
+            width: 100%;
+            max-width: 40px;
+            border-radius: 6px 6px 0 0;
+            transition: height 0.6s ease;
+            min-height: 8px;
+        }
+        .chart-bar .bar.retained { background: #22c55e; }
+        .chart-bar .bar.at-risk { background: #d97706; }
+        .chart-bar .bar.left { background: #dc2626; }
+        .chart-bar .bar-label {
+            font-size: 10px; color: #64748b;
+            margin-top: 6px; font-weight: 500;
+            text-align: center;
+        }
+        .chart-bar .bar-value {
+            font-size: 12px; font-weight: 700;
+            color: #0b1a33; margin-bottom: 4px;
+        }
+        /* ===== SAMPLE BANNER ===== */
+        .sample-banner {
+            background: #fef3c7; color: #92400e;
+            padding: 10px 16px; border-radius: 12px;
+            margin-bottom: 16px; font-size: 13px;
+            font-weight: 500; border: 1px solid #fde68a;
+        }
+        @media (max-width: 1024px) {
+            .stats-grid { grid-template-columns: repeat(3, 1fr); }
+            .two-column { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.open { transform: translateX(0); }
+            .main-content { margin-left: 0; }
+            .menu-toggle { display: block; }
+            .header { padding: 12px 18px; flex-wrap: wrap; gap: 8px; }
+            .header-left .page-title h1 { font-size: 17px; }
+            .header-right .date { display: none; }
+            .container { padding: 16px; }
+            .stats-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+            .stat-card { padding: 14px; }
+            .stat-card .stat-number { font-size: 22px; }
+            .welcome { padding: 20px; }
+            .welcome h2 { font-size: 20px; }
+            .welcome .welcome-stats { gap: 16px; }
+            .two-column { grid-template-columns: 1fr; }
+            .quick-actions { grid-template-columns: 1fr; }
+            .timeline-track { flex-wrap: wrap; gap: 16px; justify-content: center; }
+            .timeline-track::before { display: none; }
+            .timeline-node { flex: 0 0 45%; }
+        }
+        @media (max-width: 480px) {
+            .stats-grid { grid-template-columns: 1fr 1fr; }
+            .stat-card .stat-number { font-size: 18px; }
+            .header-right .profile-btn .name { display: none; }
+            .header-left .page-title p { display: none; }
+            .timeline-node { flex: 0 0 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<nav class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+        <div class="icon"><i class="fas fa-brain"></i></div>
+        <div>
+            <h2>SkillBridge</h2>
+            <p>Provider Portal</p>
+        </div>
+    </div>
+    <div class="sidebar-user">
+        <div class="avatar" id="sidebarAvatar">P</div>
+        <div class="info">
+            <div class="name" id="sidebarName">Provider</div>
+            <div class="role" id="sidebarRole">Training Provider</div>
+        </div>
+    </div>
+    <div class="menu-label">Main</div>
+    <div class="menu">
+        <a href="dashboard.html"><i class="fas fa-chart-pie"></i> Overview</a>
+        <a href="trainee-outcomes.html"><i class="fas fa-users"></i> Trainee Outcomes</a>
+        <a class="active" href="employment&retention.html"><i class="fas fa-briefcase"></i> Employment & Retention</a>
+        <a href="employer-feedback.html"><i class="fas fa-comment"></i> Employer Feedback</a>
+        <a href="skill-gaps.html"><i class="fas fa-arrow-up"></i> Skills Gaps</a>
+    </div>
+    <div class="sidebar-footer">
+        <a onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a>
+    </div>
+</nav>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div class="main-content">
+
+    <header class="header">
+        <div class="header-left">
+            <button class="menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="page-title">
+                <h1><i class="fas fa-briefcase"></i> Employment & Retention</h1>
+                <p>Track placement rates, retention metrics, and employment stability</p>
+            </div>
+        </div>
+        <div class="header-right">
+            <button class="theme-toggle" onclick="toggleTheme()" title="Switch to dark mode" aria-label="Toggle theme">
+                <i class="fas fa-moon"></i>
+            </button>
+            <span class="date" id="dateDisplay"></span>
+            <div class="notif" onclick="showNotifications()">
+                <i class="fas fa-bell"></i>
+                <span class="badge" id="notifBadge">0</span>
+            </div>
+            <button class="profile-btn" onclick="toggleProfileMenu()">
+                <div class="avatar" id="headerAvatar">P</div>
+                <span class="name" id="headerName">Provider</span>
+                <i class="fas fa-chevron-down"></i>
+            </button>
+        </div>
+    </header>
+
+    <div class="container" id="mainContainer">
+
+        <!-- WELCOME -->
+        <div class="welcome">
+            <div class="welcome-content">
+                <h2><i class="fas fa-hand-peace"></i> Retention & Employment Overview</h2>
+                <p>Monitor placement success and long-term employment retention across all programs.</p>
+                <div class="welcome-stats">
+                    <div><strong id="totalPlaced">0</strong> Total Placed</div>
+                    <div><strong id="placementRate">0%</strong> Placement Rate</div>
+                    <div><strong id="avgRetention">0%</strong> Avg. Retention</div>
+                    <div><strong id="activeEmployed">0</strong> Currently Employed</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- STATS GRID -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon blue"><i class="fas fa-briefcase"></i></div>
+                <div class="stat-number" id="statPlacementRate">0%</div>
+                <div class="stat-label">Placement Rate</div>
+                <span class="stat-change up">↑ 12%</span>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon green"><i class="fas fa-calendar-check"></i></div>
+                <div class="stat-number" id="statRetention30">0%</div>
+                <div class="stat-label">30-Day Retention</div>
+                <span class="stat-change up">↑ 8%</span>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon purple"><i class="fas fa-calendar-alt"></i></div>
+                <div class="stat-number" id="statRetention90">0%</div>
+                <div class="stat-label">90-Day Retention</div>
+                <span class="stat-change up">↑ 5%</span>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon orange"><i class="fas fa-calendar-week"></i></div>
+                <div class="stat-number" id="statRetention180">0%</div>
+                <div class="stat-label">180-Day Retention</div>
+                <span class="stat-change neutral">–</span>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon teal"><i class="fas fa-calendar-plus"></i></div>
+                <div class="stat-number" id="statRetention365">0%</div>
+                <div class="stat-label">365-Day Retention</div>
+                <span class="stat-change up">↑ 3%</span>
+            </div>
+        </div>
+
+        <!-- RETENTION TIMELINE -->
+        <div class="retention-timeline">
+            <div class="section-title">
+                <i class="fas fa-clock"></i> Retention Journey Timeline
+                <span style="font-size:12px;font-weight:400;color:#64748b;margin-left:8px;">
+                    <i class="fas fa-circle" style="color:#22c55e;font-size:8px;"></i> Completed &nbsp;
+                    <i class="fas fa-circle" style="color:#2563eb;font-size:8px;"></i> In Progress &nbsp;
+                    <i class="fas fa-circle" style="color:#e2e8f0;font-size:8px;"></i> Upcoming
+                </span>
+            </div>
+            <div class="timeline-track">
+                <div class="track-fill" id="trackFill" style="width:25%;"></div>
+                <div class="timeline-node completed" id="node30">
+                    <div class="node-circle"><i class="fas fa-check"></i></div>
+                    <div class="node-label">30 Days</div>
+                    <div class="node-value" id="node30Value">0%</div>
+                </div>
+                <div class="timeline-node active" id="node90">
+                    <div class="node-circle">90</div>
+                    <div class="node-label">90 Days</div>
+                    <div class="node-value" id="node90Value">0%</div>
+                </div>
+                <div class="timeline-node upcoming" id="node180">
+                    <div class="node-circle">180</div>
+                    <div class="node-label">180 Days</div>
+                    <div class="node-value" id="node180Value">0%</div>
+                </div>
+                <div class="timeline-node upcoming" id="node365">
+                    <div class="node-circle">365</div>
+                    <div class="node-label">365 Days</div>
+                    <div class="node-value" id="node365Value">0%</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TWO COLUMN -->
+        <div class="two-column">
+            <div>
+                <div class="card" style="margin-bottom:22px;">
+                    <div class="card-header">
+                        <h3><i class="fas fa-chart-line"></i> Retention Details</h3>
+                        <a class="view-all" href="#" onclick="exportRetentionDetails(); return false;">Export <i class="fas fa-arrow-right"></i></a>
+                    </div>
+                    <div id="retentionDetails">
+                        <div style="text-align:center;padding:20px;color:#94a3b8;">
+                            <i class="fas fa-spinner fa-spin" style="font-size:24px;display:block;margin-bottom:8px;"></i>
+                            Loading…
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-chart-bar"></i> Retention Distribution</h3>
+                        <span class="view-all" id="chartTotal">Total: 0</span>
+                    </div>
+                    <div class="chart-bars" id="retentionChart">
+                        <div class="chart-bar">
+                            <div class="bar-value" id="chartRetainedVal">0</div>
+                            <div class="bar retained" id="chartRetained" style="height:0px;"></div>
+                            <div class="bar-label">Retained</div>
+                        </div>
+                        <div class="chart-bar">
+                            <div class="bar-value" id="chartAtRiskVal">0</div>
+                            <div class="bar at-risk" id="chartAtRisk" style="height:0px;"></div>
+                            <div class="bar-label">At Risk</div>
+                        </div>
+                        <div class="chart-bar">
+                            <div class="bar-value" id="chartLeftVal">0</div>
+                            <div class="bar left" id="chartLeft" style="height:0px;"></div>
+                            <div class="bar-label">Left</div>
+                        </div>
+                    </div>
+                    <div style="margin-top:12px;padding-top:12px;border-top:1px solid #f1f5f9;display:flex;justify-content:space-between;font-size:11px;color:#94a3b8;">
+                        <span><span style="color:#22c55e;">●</span> Retained: <strong id="legendRetained">0</strong></span>
+                        <span><span style="color:#d97706;">●</span> At Risk: <strong id="legendAtRisk">0</strong></span>
+                        <span><span style="color:#dc2626;">●</span> Left: <strong id="legendLeft">0</strong></span>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <div class="card" style="margin-bottom:22px;">
+                    <div class="card-header">
+                        <h3><i class="fas fa-user-graduate"></i> Recent Trainees</h3>
+                        <a class="view-all" href="#" onclick="viewAllTrainees(); return false;">View All <i class="fas fa-arrow-right"></i></a>
+                    </div>
+                    <div id="traineeList">
+                        <div style="text-align:center;padding:20px;color:#94a3b8;">
+                            <i class="fas fa-spinner fa-spin" style="font-size:24px;display:block;margin-bottom:8px;"></i>
+                            Loading…
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-bottom:22px;">
+                    <div class="card-header">
+                        <h3><i class="fas fa-tachometer-alt"></i> Retention Progress</h3>
+                        <span class="view-all" id="retentionProgressLabel">0%</span>
+                    </div>
+                    <div class="retention-bar-container">
+                        <div class="retention-bar-label">
+                            <span>Overall Retention Rate</span>
+                            <span id="retentionPercent">0%</span>
+                        </div>
+                        <div class="retention-bar-track">
+                            <div class="fill green" id="retentionBarFill" style="width:0%;"></div>
+                        </div>
+                    </div>
+                    <div style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:11px;color:#64748b;">
+                        <div>✅ 30-Day: <strong id="bar30">0%</strong></div>
+                        <div>✅ 90-Day: <strong id="bar90">0%</strong></div>
+                        <div>⏳ 180-Day: <strong id="bar180">0%</strong></div>
+                        <div>⏳ 365-Day: <strong id="bar365">0%</strong></div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-bolt"></i> Quick Actions</h3>
+                    </div>
+                    <div class="quick-actions">
+                        <a href="#" class="action-btn" onclick="exportRetentionDetails(); return false;"><i class="fas fa-file-export"></i> Export Report</a>
+                        <a href="#" class="action-btn" onclick="viewAnalytics(); return false;"><i class="fas fa-chart-line"></i> View Analytics</a>
+                        <a href="#" class="action-btn" onclick="downloadCSV(); return false;"><i class="fas fa-download"></i> Download CSV</a>
+                        <a href="#" class="action-btn" onclick="window.print(); return false;"><i class="fas fa-print"></i> Print Report</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    // ============================================================
+    // FIREBASE CONFIG
+    // ============================================================
+    const firebaseConfig = {
+        apiKey: "AIzaSyDTA9U6UEzOhNy7lDKuQ-AFBMocHf-gtU8",
+        authDomain: "skillbridge-70863.firebaseapp.com",
+        projectId: "skillbridge-70863",
+        storageBucket: "skillbridge-70863.firebasestorage.app",
+        messagingSenderId: "912671486056",
+        appId: "1:912671486056:web:6f2dc11ab2c6042480cbdd"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    let _firebaseUser = null;
+    let _userProfile = null;
+    let _providerData = null;
+
+    // ============================================================
+    // AUTH GUARD
+    // ============================================================
+    function requireAuth() {
+        return new Promise((resolve, reject) => {
+            const unsub = auth.onAuthStateChanged(async (fbUser) => {
+                unsub();
+                if (!fbUser) {
+                    window.location.href = '../auth/login.html?role=provider';
+                    reject('not-authenticated');
+                    return;
+                }
+                try {
+                    const snap = await db.collection('users').doc(fbUser.uid).get();
+                    if (!snap.exists) {
+                        window.location.href = '../auth/login.html?role=provider';
+                        reject('no-profile');
+                        return;
+                    }
+                    const profile = snap.data();
+                    if (profile.role !== 'provider') {
+                        await auth.signOut();
+                        window.location.href = '../auth/login.html?role=provider';
+                        reject('wrong-role');
+                        return;
+                    }
+                    _firebaseUser = fbUser;
+                    _userProfile = profile;
+                    resolve(fbUser);
+                } catch (e) {
+                    console.error('Auth guard error:', e);
+                    reject(e);
+                }
+            });
+        });
+    }
+
+    // ============================================================
+    // PROVIDER DATA
+    // ============================================================
+    async function getProviderData() {
+        if (!_firebaseUser) {
+            return { providerId: 'PRV2026-0000', orgName: 'Your Training Centre', contactPerson: 'Provider' };
+        }
+
+        const uid = _firebaseUser.uid;
+        let data = {};
+
+        try {
+            const provSnap = await db.collection('providers').doc(uid).get();
+            if (provSnap.exists) data = provSnap.data();
+        } catch (e) { console.warn('providers/{uid} read failed:', e); }
+
+        if (!data.orgName) {
+            try {
+                const userSnap = await db.collection('users').doc(uid).get();
+                if (userSnap.exists) data = { ...userSnap.data(), ...data };
+            } catch (e) {}
+        }
+        if (_userProfile) data = { ..._userProfile, ...data };
+
+        return {
+            uid,
+            providerId: data.providerCode || data.providerId || ('PRV' + uid.substring(0, 6).toUpperCase()),
+            orgName: data.orgName || data.organizationName || data.centreName || _firebaseUser.displayName || 'Your Training Centre',
+            contactPerson: data.repName || data.contactPerson || data.ownerName || _firebaseUser.displayName || 'Provider',
+            email: data.email || _firebaseUser.email || ''
+        };
+    }
+
+    // ============================================================
+    // LOAD TRAINEES (with employment data) FROM FIRESTORE
+    // ============================================================
+    async function loadTraineesFromFirestore(providerData) {
+        if (!_firebaseUser) return { trainees: [], isSample: true };
+
+        const providerUid   = _firebaseUser.uid;
+        const providerCode  = (providerData?.providerId || '').toLowerCase().trim();
+        const providerName  = (providerData?.orgName || '').toLowerCase().trim();
+        const providerEmail = (providerData?.email || '').toLowerCase().trim();
+
+        let docs = [];
+
+        // Strategy 1: providers/{uid}/trainees
+        try {
+            const snap = await db.collection('providers').doc(providerUid).collection('trainees').get();
+            if (!snap.empty) snap.forEach(d => docs.push({ _id: d.id, _source: 'sub', ...d.data() }));
+        } catch (e) { console.warn('trainees subcollection read failed:', e); }
+
+        // Strategy 2: root trainees
+        if (docs.length === 0) {
+            try {
+                const snap = await db.collection('trainees').get();
+                snap.forEach(d => docs.push({ _id: d.id, _source: 'root', ...d.data() }));
+            } catch (e) { console.warn('trainees read failed:', e); }
+        }
+
+        if (docs.length === 0) {
+            return { trainees: getSampleTrainees(), isSample: true };
+        }
+
+        // Strict provider filter
+        const mine = docs.filter(t => {
+            if (t.providerUid && t.providerUid === providerUid) return true;
+            const tCode = (t.providerCode || t.providerId || '').toLowerCase().trim();
+            if (providerCode && tCode && tCode === providerCode) return true;
+            if (t._source === 'sub') return true;
+            const tName = (t.trainingProvider || t.providerName || t.orgName || '').toLowerCase().trim();
+            if (providerName && tName && (tName === providerName || tName.includes(providerName) || providerName.includes(tName))) return true;
+            const tEmail = (t.providerEmail || '').toLowerCase().trim();
+            if (providerEmail && tEmail && tEmail === providerEmail) return true;
+            return false;
+        });
+
+        if (mine.length === 0) {
+            console.warn('⚠️ No trainees matched this provider.');
+            return { trainees: getSampleTrainees(), isSample: true, linkIssue: true };
+        }
+
+        const COLOR_PALETTE = ['#2563eb','#7c3aed','#16a34a','#d97706','#dc2626','#0d9488'];
+
+        const mapped = mine.map((t, idx) => {
+            const emp = t.employment || t.currentEmployment || t.placement || t.jobDetails || null;
+
+            const rawEmpStatus =
+                (emp && (emp.status || emp.employmentStatus)) ||
+                t.employmentStatus || t.placementStatus || '';
+
+            const empLower = String(rawEmpStatus).toLowerCase();
+            let status = 'pending';
+            if (empLower.includes('self')) status = 'retained';
+            else if (empLower.includes('employ') && !empLower.includes('unemploy')) status = 'retained';
+            else if (empLower.includes('apprentice') || empLower.includes('intern')) status = 'at-risk';
+            else if (empLower.includes('unemploy') || empLower.includes('looking') || empLower.includes('left')) status = 'left';
+            else if (empLower.includes('placed') || empLower.includes('verified')) status = 'retained';
+
+            // Override: if follow-ups say "left"/"resigned", mark as left
+            const followups = Array.isArray(t.followups) ? t.followups
+                            : Array.isArray(t.followUps) ? t.followUps
+                            : [];
+            if (followups.length) {
+                const latest = followups[followups.length - 1];
+                const fs = String(latest.status || '').toLowerCase();
+                if (fs.includes('resign') || fs.includes('left') || fs.includes('terminat')) status = 'left';
+                else if (fs.includes('at-risk') || fs.includes('at risk')) status = 'at-risk';
+            }
+
+            const traineeName = t.fullName || t.name || [t.firstName, t.lastName].filter(Boolean).join(' ') || 'Trainee';
+
+            return {
+                id: t.traineeCode || t.traineeId || ('TRN' + (t.uid ? t.uid.substring(0,6) : idx)),
+                name: traineeName,
+                email: t.email || 'N/A',
+                course: t.skillTrade || t.course || t.qualification || t.trade || 'N/A',
+                provider: t.trainingProvider || t.providerName || providerData?.orgName || 'N/A',
+                status: status,
+                avatar: traineeName.charAt(0).toUpperCase(),
+                color: COLOR_PALETTE[idx % COLOR_PALETTE.length],
+                company: (emp && (emp.companyName || emp.employerName || emp.company)) || t.employerName || 'N/A',
+                jobRole: (emp && (emp.jobRole || emp.designation || emp.role)) || t.jobRole || 'N/A',
+                joiningDate: (emp && (emp.joiningDate || emp.startDate || emp.dateOfJoining)) || t.joiningDate || 'N/A',
+                salary: Number((emp && (emp.currentIncome || emp.monthlyIncome || emp.salary)) || t.currentIncome) || 0,
+                previousSalary: Number((emp && emp.previousIncome) || t.previousIncome) || 0,
+                employmentType: (emp && (emp.employmentType || emp.type)) || t.employmentType || 'N/A',
+                location: (emp && (emp.jobCity || emp.location)) || t.location || 'N/A',
+                followupPeriod: (followups[0] && followups[0].period) || t.followupPeriod || '90 Days',
+                followupStatus: (followups[0] && followups[0].status) || t.followupStatus || 'Pending',
+                followupDate: (followups[0] && followups[0].date) || t.followupDate || 'N/A',
+                _sample: false
+            };
+        });
+
+        return { trainees: mapped, isSample: false };
+    }
+
+    // ============================================================
+    // SAMPLE DATA (Fallback)
+    // ============================================================
+    function getSampleTrainees() {
+        const arr = [
+            { id: 'TRN001', name: 'Priya Sharma', email: 'priya@email.com', course: 'Data Analytics', provider: 'Skill India Centre', status: 'retained', avatar: 'P', color: '#2563eb', company: 'ABC Technologies', jobRole: 'Data Analyst', joiningDate: '2026-04-12', salary: 28000, previousSalary: 12000, employmentType: 'Full Time', location: 'Bengaluru', followupPeriod: '90 Days', followupStatus: 'Completed', followupDate: '2026-09-20' },
+            { id: 'TRN002', name: 'Rahul Verma', email: 'rahul@email.com', course: 'Full Stack Development', provider: 'NITC Training', status: 'retained', avatar: 'R', color: '#7c3aed', company: 'Tech Solutions Ltd', jobRole: 'Full Stack Developer', joiningDate: '2026-05-15', salary: 32000, previousSalary: 15000, employmentType: 'Full Time', location: 'Mumbai', followupPeriod: '90 Days', followupStatus: 'In Progress', followupDate: '2026-09-15' },
+            { id: 'TRN003', name: 'Ananya Reddy', email: 'ananya@email.com', course: 'Digital Marketing', provider: 'Digital India Academy', status: 'retained', avatar: 'A', color: '#16a34a', company: 'Growth Media', jobRole: 'Marketing Lead', joiningDate: '2026-06-01', salary: 25000, previousSalary: 10000, employmentType: 'Full Time', location: 'Delhi', followupPeriod: '180 Days', followupStatus: 'Pending', followupDate: '2026-09-30' },
+            { id: 'TRN004', name: 'Vikram Singh', email: 'vikram@email.com', course: 'Data Science', provider: 'Data Science Institute', status: 'at-risk', avatar: 'V', color: '#d97706', company: 'AI Solutions', jobRole: 'Data Scientist', joiningDate: '2026-07-01', salary: 35000, previousSalary: 18000, employmentType: 'Full Time', location: 'Hyderabad', followupPeriod: '30 Days', followupStatus: 'Completed', followupDate: '2026-08-15' },
+            { id: 'TRN005', name: 'Sneha Patel', email: 'sneha@email.com', course: 'UI/UX Design', provider: 'Design Academy', status: 'left', avatar: 'S', color: '#dc2626', company: 'N/A', jobRole: 'N/A', joiningDate: 'N/A', salary: 0, previousSalary: 8000, employmentType: 'N/A', location: 'N/A', followupPeriod: '90 Days', followupStatus: 'Pending', followupDate: '2026-09-25' },
+            { id: 'TRN006', name: 'Arjun Nair', email: 'arjun@email.com', course: 'Cloud Computing', provider: 'Cloud Academy', status: 'retained', avatar: 'A', color: '#0d9488', company: 'Cloud Infra', jobRole: 'Cloud Engineer', joiningDate: '2026-08-01', salary: 30000, previousSalary: 14000, employmentType: 'Full Time', location: 'Chennai', followupPeriod: '30 Days', followupStatus: 'Completed', followupDate: '2026-09-01' },
+            { id: 'TRN007', name: 'Kiran Joshi', email: 'kiran@email.com', course: 'Full Stack Development', provider: 'Code Institute', status: 'at-risk', avatar: 'K', color: '#7c3aed', company: 'Startup Hub', jobRole: 'Junior Developer', joiningDate: '2026-09-01', salary: 15000, previousSalary: 5000, employmentType: 'Apprenticeship', location: 'Pune', followupPeriod: '90 Days', followupStatus: 'Pending', followupDate: '2026-10-01' },
+            { id: 'TRN008', name: 'Divya K', email: 'divya@email.com', course: 'Data Analytics', provider: 'Analytics School', status: 'retained', avatar: 'D', color: '#2563eb', company: 'Data Corp', jobRole: 'Data Analyst Intern', joiningDate: '2026-08-15', salary: 18000, previousSalary: 0, employmentType: 'Internship', location: 'Bengaluru', followupPeriod: '30 Days', followupStatus: 'In Progress', followupDate: '2026-09-10' }
+        ];
+        return arr.map(t => ({ ...t, _sample: true }));
+    }
+
+    // ============================================================
+    // RETENTION METRICS
+    // ============================================================
+    function calculateRetentionMetrics(trainees) {
+        const total = trainees.length;
+        const employed = trainees.filter(t => t.status === 'retained' || t.status === 'at-risk').length;
+        const retained = trainees.filter(t => t.status === 'retained').length;
+        const atRisk   = trainees.filter(t => t.status === 'at-risk').length;
+        const left     = trainees.filter(t => t.status === 'left').length;
+
+        const now = new Date();
+        let ret30 = 0, ret90 = 0, ret180 = 0, ret365 = 0;
+        let eligible30 = 0, eligible90 = 0, eligible180 = 0, eligible365 = 0;
+
+        trainees.forEach(t => {
+            if (!t.joiningDate || t.joiningDate === 'N/A') return;
+            const joinDate = new Date(t.joiningDate);
+            if (isNaN(joinDate)) return;
+            const daysDiff = (now - joinDate) / (1000 * 60 * 60 * 24);
+
+            if (daysDiff >= 30)  { eligible30++;  if (t.status !== 'left') ret30++; }
+            if (daysDiff >= 90)  { eligible90++;  if (t.status !== 'left') ret90++; }
+            if (daysDiff >= 180) { eligible180++; if (t.status !== 'left') ret180++; }
+            if (daysDiff >= 365) { eligible365++; if (t.status !== 'left') ret365++; }
+        });
+
+        return {
+            total, employed, retained, atRisk, left,
+            ret30:  eligible30  ? Math.round((ret30  / eligible30)  * 100) : 0,
+            ret90:  eligible90  ? Math.round((ret90  / eligible90)  * 100) : 0,
+            ret180: eligible180 ? Math.round((ret180 / eligible180) * 100) : 0,
+            ret365: eligible365 ? Math.round((ret365 / eligible365) * 100) : 0,
+            placementRate: total ? Math.round((employed / total) * 100) : 0,
+            retentionRate: employed ? Math.round((retained / employed) * 100) : 0
+        };
+    }
+
+    // ============================================================
+    // STATE
+    // ============================================================
+    let allTrainees = [];
+    let isSampleData = false;
+
+    // ============================================================
+    // RENDER
+    // ============================================================
+    function renderAll() {
+        const metrics = calculateRetentionMetrics(allTrainees);
+
+        document.getElementById('totalPlaced').textContent      = metrics.employed;
+        document.getElementById('placementRate').textContent    = metrics.placementRate + '%';
+        document.getElementById('avgRetention').textContent     = metrics.retentionRate + '%';
+        document.getElementById('activeEmployed').textContent   = metrics.retained;
+
+        document.getElementById('statPlacementRate').textContent = metrics.placementRate + '%';
+        document.getElementById('statRetention30').textContent   = metrics.ret30 + '%';
+        document.getElementById('statRetention90').textContent   = metrics.ret90 + '%';
+        document.getElementById('statRetention180').textContent  = metrics.ret180 + '%';
+        document.getElementById('statRetention365').textContent  = metrics.ret365 + '%';
+
+        document.getElementById('node30Value').textContent  = metrics.ret30 + '%';
+        document.getElementById('node90Value').textContent  = metrics.ret90 + '%';
+        document.getElementById('node180Value').textContent = metrics.ret180 + '%';
+        document.getElementById('node365Value').textContent = metrics.ret365 + '%';
+
+        updateTimelineNode('node30', metrics.ret30);
+        updateTimelineNode('node90', metrics.ret90);
+        updateTimelineNode('node180', metrics.ret180);
+        updateTimelineNode('node365', metrics.ret365);
+
+        const avgRet = Math.round((metrics.ret30 + metrics.ret90 + metrics.ret180 + metrics.ret365) / 4);
+        document.getElementById('trackFill').style.width = Math.min(avgRet, 100) + '%';
+
+        renderRetentionDetails(metrics);
+        renderRetentionChart(metrics);
+        renderTraineeList();
+
+        document.getElementById('retentionPercent').textContent = metrics.retentionRate + '%';
+        document.getElementById('retentionProgressLabel').textContent = metrics.retentionRate + '%';
+        document.getElementById('retentionBarFill').style.width = metrics.retentionRate + '%';
+        document.getElementById('bar30').textContent  = metrics.ret30 + '%';
+        document.getElementById('bar90').textContent  = metrics.ret90 + '%';
+        document.getElementById('bar180').textContent = metrics.ret180 + '%';
+        document.getElementById('bar365').textContent = metrics.ret365 + '%';
+
+        document.getElementById('notifBadge').textContent = metrics.atRisk;
+    }
+
+    function updateTimelineNode(nodeId, value) {
+        const node = document.getElementById(nodeId);
+        if (!node) return;
+        node.classList.remove('completed', 'active', 'upcoming');
+        if (value >= 75) node.classList.add('completed');
+        else if (value >= 40) node.classList.add('active');
+        else node.classList.add('upcoming');
+    }
+
+    function renderRetentionDetails(m) {
+        const container = document.getElementById('retentionDetails');
+        container.innerHTML = `
+            <div class="retention-detail-item">
+                <span class="label"><i class="fas fa-users"></i> Total Placed</span>
+                <span class="value">${m.employed}</span>
+            </div>
+            <div class="retention-detail-item">
+                <span class="label"><i class="fas fa-check-circle"></i> Retained</span>
+                <span class="value positive">${m.retained} (${m.retentionRate}%)</span>
+            </div>
+            <div class="retention-detail-item">
+                <span class="label"><i class="fas fa-exclamation-triangle"></i> At Risk</span>
+                <span class="value warning">${m.atRisk}</span>
+            </div>
+            <div class="retention-detail-item">
+                <span class="label"><i class="fas fa-times-circle"></i> Left</span>
+                <span class="value danger">${m.left}</span>
+            </div>
+            <div class="retention-detail-item">
+                <span class="label"><i class="fas fa-percent"></i> Placement Rate</span>
+                <span class="value positive">${m.placementRate}%</span>
+            </div>
+            <div class="retention-detail-item">
+                <span class="label"><i class="fas fa-calendar-check"></i> 30-Day Retention</span>
+                <span class="value positive">${m.ret30}%</span>
+            </div>
+            <div class="retention-detail-item">
+                <span class="label"><i class="fas fa-calendar-alt"></i> 90-Day Retention</span>
+                <span class="value positive">${m.ret90}%</span>
+            </div>
+            <div class="retention-detail-item">
+                <span class="label"><i class="fas fa-calendar-week"></i> 180-Day Retention</span>
+                <span class="value">${m.ret180}%</span>
+            </div>
+            <div class="retention-detail-item">
+                <span class="label"><i class="fas fa-calendar-plus"></i> 365-Day Retention</span>
+                <span class="value">${m.ret365}%</span>
+            </div>`;
+    }
+
+    function renderRetentionChart(m) {
+        const { retained, atRisk, left, total } = m;
+        const maxVal = Math.max(retained, atRisk, left, 1);
+        const maxHeight = 100;
+
+        document.getElementById('chartRetainedVal').textContent = retained;
+        document.getElementById('chartRetained').style.height = Math.round((retained / maxVal) * maxHeight) + 'px';
+        document.getElementById('chartAtRiskVal').textContent = atRisk;
+        document.getElementById('chartAtRisk').style.height = Math.round((atRisk / maxVal) * maxHeight) + 'px';
+        document.getElementById('chartLeftVal').textContent = left;
+        document.getElementById('chartLeft').style.height = Math.round((left / maxVal) * maxHeight) + 'px';
+
+        document.getElementById('chartTotal').textContent = 'Total: ' + total;
+        document.getElementById('legendRetained').textContent = retained;
+        document.getElementById('legendAtRisk').textContent = atRisk;
+        document.getElementById('legendLeft').textContent = left;
+    }
+
+    function renderTraineeList() {
+        const container = document.getElementById('traineeList');
+        const list = allTrainees.slice(0, 5);
+        const statusMap = {
+            'retained': { label: 'Retained', class: 'retained' },
+            'at-risk':  { label: 'At Risk',  class: 'at-risk' },
+            'left':     { label: 'Left',     class: 'left' },
+            'pending':  { label: 'Pending',  class: 'pending' }
+        };
+
+        if (!list.length) {
+            container.innerHTML = `<div style="text-align:center;padding:20px;color:#94a3b8;">No trainees yet</div>`;
+            return;
+        }
+
+        container.innerHTML = list.map(t => {
+            const s = statusMap[t.status] || statusMap['pending'];
+            return `
+                <div class="trainee-item">
+                    <div class="info">
+                        <div class="avatar" style="background:${t.color}">${t.avatar}</div>
+                        <div class="details">
+                            <div class="name">${t.name}</div>
+                            <div class="sub">${t.course} · ${t.company || 'N/A'}</div>
+                        </div>
+                    </div>
+                    <span class="status ${s.class}">${s.label}</span>
+                </div>`;
+        }).join('');
+    }
+
+    function showSampleBanner(linkIssue) {
+        const old = document.querySelector('.sample-banner');
+        if (old) old.remove();
+
+        const msg = linkIssue
+            ? '⚠️ Showing sample data — no trainee records are linked to this provider yet. Add `providerUid`, `providerCode`, or `trainingProvider` to trainee docs.'
+            : 'ℹ️ Showing sample data — no trainee records found in Firestore.';
+
+        const el = document.createElement('div');
+        el.className = 'sample-banner';
+        el.textContent = msg;
+        document.getElementById('mainContainer').prepend(el);
+    }
+
+    // ============================================================
+    // QUICK ACTIONS
+    // ============================================================
+    function exportRetentionDetails() {
+        const m = calculateRetentionMetrics(allTrainees);
+        const report = `
+📊 EMPLOYMENT & RETENTION REPORT
+================================
+📅 Generated: ${new Date().toLocaleDateString()}
+👤 Provider: ${_providerData?.orgName || 'N/A'}
+
+📈 PLACEMENT STATISTICS
+• Total Trainees: ${m.total}
+• Total Placed: ${m.employed}
+• Placement Rate: ${m.placementRate}%
+
+🔄 RETENTION METRICS
+• Retained: ${m.retained} (${m.retentionRate}%)
+• At Risk: ${m.atRisk}
+• Left: ${m.left}
+
+📅 RETENTION RATES
+• 30-Day: ${m.ret30}%
+• 90-Day: ${m.ret90}%
+• 180-Day: ${m.ret180}%
+• 365-Day: ${m.ret365}%
+
+📋 TRAINEE LIST
+${allTrainees.map(t => `• ${t.name} - ${t.course} - ${t.company} - ${t.status}`).join('\n')}
+================================`;
+        alert(report);
+        console.log(report);
+    }
+
+    function viewAnalytics() {
+        const m = calculateRetentionMetrics(allTrainees);
+        alert(`📊 RETENTION ANALYTICS\n\n` +
+              `📈 OVERVIEW\n• Total: ${m.total}\n• Placement Rate: ${m.placementRate}%\n• Retention Rate: ${m.retentionRate}%\n\n` +
+              `🔄 STATUS\n• ✅ Retained: ${m.retained}\n• ⚠️ At Risk: ${m.atRisk}\n• ❌ Left: ${m.left}\n\n` +
+              `📅 MILESTONES\n• 30 Day: ${m.ret30}%\n• 90 Day: ${m.ret90}%\n• 180 Day: ${m.ret180}%\n• 365 Day: ${m.ret365}%\n\n` +
+              `💡 RECOMMENDATIONS\n` +
+              `${m.ret30 < 60 ? '• ⚠️ 30-day retention low. Consider early engagement.\n' : '• ✅ 30-day retention strong.\n'}` +
+              `${m.atRisk > m.total * 0.2 ? '• ⚠️ High at-risk count. Schedule follow-ups.\n' : '• ✅ At-risk within range.\n'}`);
+    }
+
+    function downloadCSV() {
+        if (allTrainees.length === 0) { alert('No data to export!'); return; }
+
+        let csv = 'Name,Email,Course,Company,Job Role,Joining Date,Salary,Status,Follow-up Status\n';
+        allTrainees.forEach(t => {
+            csv += `"${t.name}","${t.email || 'N/A'}","${t.course}","${t.company}","${t.jobRole || 'N/A'}","${t.joiningDate}",${t.salary},"${t.status}","${t.followupStatus || 'N/A'}"\n`;
+        });
+
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `retention-report-${new Date().toISOString().split('T')[0]}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        alert('✅ CSV downloaded successfully!');
+    }
+
+    function viewAllTrainees() {
+        if (allTrainees.length === 0) { alert('No trainees found!'); return; }
+        let msg = '📋 ALL TRAINEES\n================================\n\n';
+        allTrainees.forEach((t, i) => {
+            msg += `${i + 1}. ${t.name}\n`;
+            msg += `   📚 ${t.course} | 🏢 ${t.company}\n`;
+            msg += `   💰 ₹${t.salary.toLocaleString()} | 📅 ${t.joiningDate}\n`;
+            msg += `   📊 Status: ${t.status.toUpperCase()}\n\n`;
+        });
+        msg += `Total: ${allTrainees.length} trainees`;
+        alert(msg);
+    }
+
+    function showNotifications() {
+        const m = calculateRetentionMetrics(allTrainees);
+        alert(`📬 Notifications\n\n• ${m.atRisk} trainees at risk\n• ${m.left} trainees left\n• ${m.retained} currently retained${isSampleData ? '\n\nℹ️ Showing sample data' : ''}`);
+    }
+
+    function toggleProfileMenu() {
+        alert('👤 Profile Menu\n\nSettings · Support · Logout');
+    }
+
+    function logout() {
+        if (confirm('Are you sure you want to logout?')) {
+            auth.signOut().finally(() => {
+                try {
+                    localStorage.removeItem('currentProviderEmail');
+                    localStorage.removeItem('currentProviderId');
+                    localStorage.removeItem('isLoggedIn');
+                    localStorage.removeItem('userRole');
+                    localStorage.removeItem('userId');
+                } catch (e) {}
+                window.location.href = '../auth/login.html?role=provider';
+            });
+        }
+    }
+
+    function toggleTheme() {
+        const html = document.documentElement;
+        const current = html.getAttribute('data-theme') || 'light';
+        const next = current === 'dark' ? 'light' : 'dark';
+        html.setAttribute('data-theme', next);
+        try { localStorage.setItem('skillintel-theme', next); } catch (e) {}
+        const icon = document.querySelector('.theme-toggle i');
+        if (icon) icon.className = next === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+    }
+
+    function updateDate() {
+        const now = new Date();
+        document.getElementById('dateDisplay').textContent = now.toLocaleDateString('en-US', {
+            weekday: 'short', year: 'numeric', month: 'short', day: 'numeric'
+        });
+    }
+
+    // ============================================================
+    // INIT
+    // ============================================================
+    document.addEventListener('DOMContentLoaded', async function() {
+        try {
+            const saved = localStorage.getItem('skillintel-theme') || 'light';
+            document.documentElement.setAttribute('data-theme', saved);
+            const icon = document.querySelector('.theme-toggle i');
+            if (icon) icon.className = saved === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        } catch (e) {}
+
+        updateDate();
+
+        try {
+            await requireAuth();
+            _providerData = await getProviderData();
+
+            const initial = (_providerData.orgName || 'P').charAt(0).toUpperCase();
+            document.getElementById('sidebarAvatar').textContent = initial;
+            document.getElementById('sidebarName').textContent   = _providerData.orgName;
+            document.getElementById('sidebarRole').textContent   = 'Training Provider';
+            document.getElementById('headerAvatar').textContent  = initial;
+            document.getElementById('headerName').textContent    = _providerData.orgName;
+
+            const result = await loadTraineesFromFirestore(_providerData);
+            allTrainees = result.trainees;
+            isSampleData = result.isSample;
+
+            console.log(`✅ Loaded ${allTrainees.length} trainees (sample: ${result.isSample})`);
+
+            renderAll();
+
+            if (result.isSample) showSampleBanner(result.linkIssue);
+
+        } catch (e) {
+            console.warn('Init aborted:', e);
+        }
+
+        document.addEventListener('click', function(e) {
+            const sidebar = document.getElementById('sidebar');
+            const toggle = document.querySelector('.menu-toggle');
+            if (window.innerWidth <= 768 && sidebar.classList.contains('open')) {
+                if (!sidebar.contains(e.target) && e.target !== toggle && !toggle.contains(e.target)) {
+                    sidebar.classList.remove('open');
+                }
+            }
+        });
+    });
+</script>
+
+<script src="../js/script.js"></script>
+</body>
+</html>
